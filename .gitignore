@@ -1,0 +1,19 @@
+# Python Standard
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Project Specific
+intruders/
+serviceAccountKey.json
+service-account-key.json
+*.log
+*.whl
+
+# Large binary files (dlib wheel)
+dlib-*.whl
+
+# OS Specific
+.DS_Store
+Thumbs.db

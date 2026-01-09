@@ -1,0 +1,14 @@
+# Core Dependencies
+numpy<2.0.0
+opencv-python
+face_recognition  # Requires dlib (Windows: install wheel first, see README)
+pyserial
+
+# Cloud Dependencies
+firebase-admin
+google-cloud-storage
+
+# Dashboard Dependencies
+streamlit
+pandas
+plotly
