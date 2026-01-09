@@ -35,6 +35,25 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title(f"🛡️ {PAGE_TITLE}")
+st.markdown("---")
+
+# --- AUTHENTICATION ---
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+def check_password():
+    if st.session_state["password_input"] == "admin123":
+        st.session_state["authenticated"] = True
+    else:
+        st.error("❌ Incorrect Password")
+
+if not st.session_state["authenticated"]:
+    st.subheader("Login Required")
+    st.text_input("Enter Admin Password", type="password", key="password_input", on_change=check_password)
+    st.stop()  # Stop execution until authenticated
+
+st.success("✅ Authenticated as Admin")
+
 
 @st.cache_resource
 def get_db():

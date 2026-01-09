@@ -13,7 +13,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore, storage
 
 # --- CONFIGURATION ---
-SERIAL_PORT = "COM3"
+SERIAL_PORT = "COM7"
 BAUD_RATE = 9600
 KNOWN_FACES_DIR = "known_faces"
 INTRUDERS_DIR = "intruders"
@@ -68,26 +68,26 @@ def initialize_serial():
 # --- HELPER FUNCTIONS ---
 
 def trigger_buzzer():
-    """Sends command to Microcontroller to sound the alarm."""
+    """Sends command to Microcontroller to sound the alarm (Intruder)."""
     if ser:
         try:
-            ser.write(b"ALARM_ON\n")
-            print("[Sent] ALARM_ON signal to hardware.")
+            ser.write(b"I") # Send 'I' for Intruder
+            print("[Sent] 'I' signal to hardware -> Lock Gate & Alarm.")
         except Exception as e:
             print(f"[ERROR] Serial write failed: {e}")
     else:
-        print("[SIMULATION] Hardware Alarm Triggered (Buzzer ON)")
+        print("[SIMULATION] Hardware Alarm Triggered (Servo Locked & Alarm)")
 
 def trigger_welcome_beep():
-    """Sends command to Microcontroller to play welcoming beep for authorized users."""
+    """Sends command to Microcontroller to open gate and welcome (Authorized)."""
     if ser:
         try:
-            ser.write(b"WELCOME\n")
-            print("[Sent] WELCOME signal to hardware - Playing friendly beeps.")
+            ser.write(b"A") # Send 'A' for Authorized
+            print("[Sent] 'A' signal to hardware -> Open Gate & Welcome.")
         except Exception as e:
             print(f"[ERROR] Serial write failed: {e}")
     else:
-        print("[SIMULATION] Hardware Welcome Beep (Short & Pleasant)")
+        print("[SIMULATION] Hardware Welcome (Servo Open & Beep)")
 
 def upload_image_to_bucket(local_path):
     """Uploads file to GCS and returns public URL."""
@@ -266,8 +266,19 @@ def process_camera(known_encodings, known_names):
         if len(distances) > 0:
             best_idx = np.argmin(distances)
             if distances[best_idx] < TOLERANCE:
-                person_name = known_names[best_idx]
-                is_intruder_face = False
+                detected_name = known_names[best_idx]
+                
+                # --- NEW REQUIREMENT: Logic Aggregation ---
+                # Only Authorize specific names
+                AUTHORIZED_NAMES = ["Yeo Din Song", "Lim Yong Jun"]
+                
+                # Check partial match just in case of slight variations (case insensitive)
+                if any(auth_name.lower() in detected_name.lower() for auth_name in AUTHORIZED_NAMES):
+                    person_name = detected_name
+                    is_intruder_face = False
+                else:
+                    person_name = detected_name + " (Unauthorized)"
+                    is_intruder_face = True
         
         # Logic Aggregation
         if is_intruder_face:
