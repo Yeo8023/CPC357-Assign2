@@ -143,7 +143,7 @@ python -m streamlit run dashboard.py
 3.  Grant `Cloud Datastore User` and `Storage Object Viewer` permissions to the Cloud Run Service Account.
 4.  See detailed steps in `deployment_guide.md`.
 
-**Live Demo**: [Click Here to View Dashboard](https://security-dashboard-432472007208.asia-southeast1.run.app/)
+**Live Demo**: [Click Here to View Dashboard](https://smart-access-control-dashboard-432472007208.asia-southeast1.run.app/)
 
 ## 📖 How It Works
 
