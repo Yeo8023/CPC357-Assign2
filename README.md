@@ -1,4 +1,4 @@
-# 🛡️ IOT-Based Intruder Detection System
+# 🛡️ Smart Access Control System
 
 A smart security system that uses facial recognition to detect intruders, control a physical gate (Servo), and alerts through hardware buzzer and **Google Cloud Platform (GCP)** logging.
 

@@ -7,7 +7,7 @@ import datetime
 import os
 
 # --- CONFIGURATION ---
-PAGE_TITLE = "IOT-based Intruder Detection System"
+PAGE_TITLE = "Smart Access Control System"
 COLLECTION_NAME = "security_logs"
 GCP_KEY_PATH = "serviceAccountKey.json"
 
