@@ -1,14 +1,16 @@
 # 🛡️ IOT-Based Intruder Detection System
 
-A smart security system that uses facial recognition to detect intruders and alerts through hardware buzzer and **Google Cloud Platform (GCP)** logging.
+A smart security system that uses facial recognition to detect intruders, control a physical gate (Servo), and alerts through hardware buzzer and **Google Cloud Platform (GCP)** logging.
 
 ## 📋 Features
 
-- **Real-time Face Recognition** - Identifies authorized users vs intruders
-- **Hardware Integration** - PIR motion sensor + buzzer alarm on ESP32 microcontroller
-- **Cloud Logging** - Stores events and intruder photos in **Google Cloud (Firestore & Storage)**
-- **Web Dashboard** - Real-time monitoring via **Cloud Run**
-- **Smart Alerts** - Welcome beep for authorized users, loud alarm for intruders
+- **Real-time Face Recognition** - Identifies specific authorized users ("Yeo Din Song", "Lim Yong Jun") vs intruders.
+- **Dual-Response Hardware** - 
+    - **Authorized**: Opens Gate (Servo 90°) + Welcome Chime.
+    - **Intruder**: Locks Gate (Servo 0°) + Loud Alarm.
+- **Cloud Logging** - Stores events and intruder photos in **Google Cloud (Firestore & Storage)**.
+- **Secure Dashboard** - Password-protected web dashboard hosted on **Cloud Run**.
+- **Smart Alerts** - Welcome beep for authorized users, loud alarm for intruders.
 
 ## 🌍 SDG 11 Impact Analysis
 
@@ -25,11 +27,12 @@ This project directly contributes to Smart City safety by:
 - Maker Feather AIoT S3 (ESP32-S3) microcontroller
 - PIR Motion Sensor (connected to GPIO 4)
 - Passive Buzzer (connected to GPIO 39)
+- **Micro Servo Motor (SG90) (connected to GPIO 14)**
 - Laptop/PC with webcam
 
 ## 💻 Software Requirements
 
-- Python 3.8 or higher
+- Python 3.10 (Recommended)
 - Arduino IDE (for microcontroller)
 - **Google Cloud Platform (GCP)** Account
 
@@ -42,11 +45,11 @@ Run this command to check your installed version:
 python --version
 # Output Example: Python 3.10.6
 ```
-> **Important:** Note your version (e.g., `3.9`, `3.10`, `3.11`) as you will need to download the matching wheel in Step 3.
+> **Important:** Note your version. You will need to download the matching `dlib` wheel in Step 3.
 
 ### 2. Create Virtual Environment (Recommended)
 
-To avoid conflicts, create a virtual environment:
+To avoid conflict, create a virtual environment:
 
 ```bash
 # 1. Navigate to project
@@ -63,19 +66,15 @@ python -m venv venv
 
 ### 3. Install Python Dependencies
 
-**For Windows users**, you must install `dlib` manually first (it requires C++ tools otherwise).
+**For Windows users**, you must install `dlib` manually first.
 
 1.  **Download the correct wheel:**
-    Go to the [Dlib Repository](https://github.com/z-mahmud22/Dlib_Windows_Python3.x/releases) and download the `.whl` file matching your Python version:
-    *   `cp39` → Python 3.9
-    *   `cp310` → Python 3.10 (*Recommended*)
-    *   `cp311` → Python 3.11
-
+    Go to the [Dlib Repository](https://github.com/z-mahmud22/Dlib_Windows_Python3.x/releases) and download the `.whl` file matching your Python version (e.g., `cp310` for Python 3.10).
     *Save the file inside this project folder.*
 
 2.  **Install the wheel:**
     ```bash
-    # Example for Python 3.10 (Update filename if yours is different)
+    # Example for Python 3.10
     pip install dlib-19.22.99-cp310-cp310-win_amd64.whl
     ```
 
@@ -90,33 +89,34 @@ python -m venv venv
 2.  **Create a Project**: Select "New Project" and give it a name.
 3.  **Enable Services**:
     *   **Firestore**: Search for "Firestore", select "Native Mode", and create a database.
-    *   **Cloud Storage**: Search for "Cloud Storage" and create a bucket (Project ID as name recommended).
+    *   **Cloud Storage**: Search for "Cloud Storage" and create a bucket.
 4.  **Get Credentials**:
     *   Navigate to **IAM & Admin** → **Service Accounts**.
-    *   Click **Create Service Account** -> Name it "iot-gateway".
-    *   **Grant Roles**: Add `Cloud Datastore User` and `Storage Object Admin`.
-    *   Click the created account → **Keys** tab → **Add Key** → **Create new key (JSON)**.
-    *   Rename the downloaded file to `serviceAccountKey.json` and place it in this project root.
+    *   Create account "iot-gateway".
+    *   **Grant Roles**: `Cloud Datastore User`, `Storage Object Admin`.
+    *   **Keys** tab → **Add Key** → **Create new key (JSON)**.
+    *   Rename to `serviceAccountKey.json` and place in this project root.
 
 ### 5. Configure Arduino
 
-1. Open `arduinocode.ino` in Arduino IDE
-2. Select board: **Tools → Board → ESP32 Arduino → Cytron Maker Feather AIoT S3**
-3. Select your COM port: **Tools → Port → COMX**
-4. Upload the code to the microcontroller
+1. Open `arduinocode/arduinocode.ino` in Arduino IDE.
+2. Select board: **Tools → Board → ESP32 Arduino → Cytron Maker Feather AIoT S3**.
+3. Select your COM port: **Tools → Port → COMx**.
+4. **Install Library**: Search for **ESP32Servo** in Library Manager and install it.
+5. Upload the code.
 
 ### 6. Add Known Faces
 
-1. Create a `known_faces` folder in the project root
-2. Add photos of authorized people (one face per image)
-3. Name files: `PersonName.jpg` or `PersonName1.jpg`, `PersonName2.jpg`
-   - Tip: Multiple photos per person improves recognition
+1. Create a `known_faces` folder in the project root.
+2. Add photos of authorized people:
+   - **Required Names**: `Yeo Din Song.jpg`, `Lim Yong Jun.jpg`.
+   - *Note: Only these specific names will trigger the "Authorized" (Gate Open) response.*
 
 ### 7. Update COM Port
 
 Edit `security_gateway.py` line 15:
 ```python
-SERIAL_PORT = "COM3"  # Change to your microcontroller's COM port
+SERIAL_PORT = "COM7"  # Change to your microcontroller's COM port
 ```
 
 ## ▶️ Running the System
@@ -132,68 +132,50 @@ python security_gateway.py
 
 **Option A: Run Locally**
 ```bash
-streamlit run dashboard.py
+python -m streamlit run dashboard.py
 ```
-Access at: http://localhost:8501
+*   **Login Password**: `admin123`
+*   Access at: http://localhost:8501
 
 **Option B: Deploy to Google Cloud Run**
-To host clearly on the web (as per Technical Report):
-1.  Push this code to GitHub.
-2.  Go to [Google Cloud Console - Cloud Run](https://console.cloud.google.com/run).
-3.  Click **Create Service**.
-4.  Select **"Continuously deploy from a source repository"** and connect your GitHub.
-5.  Allow unauthenticated invocations (Public access).
-6.  Click **Create**.
+1.  Push code to GitHub.
+2.  Create Cloud Run Service connected to GitHub.
+3.  Grant `Cloud Datastore User` and `Storage Object Viewer` permissions to the Cloud Run Service Account.
+4.  See detailed steps in `deployment_guide.md`.
 
 **Live Demo**: [Click Here to View Dashboard](https://security-dashboard-432472007208.asia-southeast1.run.app/)
 
 ## 📖 How It Works
 
-1. **PIR sensor detects motion** → Arduino sends "MOTION" signal to Python
-2. **Camera captures image** → Python performs face recognition
-3. **If authorized** → Welcome beep plays, logs to Firestore
-4. **If intruder** → Loud alarm plays, saves photo, uploads to Cloud Storage
-5. **View logs** → Cloud Dashboard shows all events and evidence
+1. **PIR sensor detects motion** → Arduino sends "MOTION" signal to Python.
+2. **Camera captures image** → Python performs face recognition.
+3. **If Authorized** (Yeo Din Song / Lim Yong Jun):
+   - Gateway sends **'A'**.
+   - **Servo rotates 90° (Gate Open)**.
+   - Welcome Chime plays.
+   - Logs to Firestore.
+4. **If Intruder/Unknown**:
+   - Gateway sends **'I'**.
+   - **Servo stays at 0° (Gate Locked)**.
+   - Loud Alarm plays.
+   - Photo saved & uploaded to Cloud Storage.
+5. **View logs** → Cloud Dashboard (Password Protected) shows events & evidence.
 
 ## 📁 Project Structure
 
 ```
 IOT-Based-Intruder-Detection-System/
-├── arduinocode.ino              # Microcontroller code
+├── arduinocode/
+│   └── arduinocode.ino          # Microcontroller code (ESP32 + Servo)
 ├── security_gateway.py          # Main detection system (Edge)
-├── dashboard.py                 # Web dashboard (Cloud/App)
-├── Dockerfile                   # Cloud Run container config
+├── dashboard.py                 # Password-protected Web dashboard
+├── Dockerfile                   # Cloud Run configuration
 ├── requirements.txt             # Project dependencies
-├── requirements_dashboard.txt   # Optimized Cloud dependencies
-├── serviceAccountKey.json       # Firebase credentials
-├── dlib-19.22.99-cp310-*.whl    # Facial recognition wheel
+├── serviceAccountKey.json       # Firebase credentials (local only)
 ├── known_faces/                 # Authorized people photos
 ├── intruders/                   # Captured intruder photos
-└── .gitignore                   # Git configuration
+└── README.md                    # This documentation
 ```
-
-## 🎛️ Configuration
-
-Edit `security_gateway.py` to customize:
-
-- `SERIAL_PORT` - Arduino COM port (line 15)
-- `TOLERANCE` - Face recognition sensitivity (line 23, lower = stricter)
-- `PREVIEW_DURATION_SECONDS` - Camera preview time (line 27)
-
-## ❓ Troubleshooting
-
-**Camera not opening?**
-- Make sure no other application is using the camera
-- Try running as administrator
-
-**Arduino not connecting?**
-- Check COM port in Device Manager
-- Install CP210x USB driver if needed
-
-**Face recognition not working?**
-- Ensure good lighting in photos and detection
-- Add 2-3 photos per person from different angles
-- Adjust `TOLERANCE` value (0.4-0.6 range)
 
 ## 📝 License
 
